@@ -2,8 +2,11 @@
 This repository contains all our cloud formation templates of our use cases. This makes it easy to set up our SOAR solution on any account and easy to tear down if needed. Each template requires one manual change before you can successfully import it in AWS Cloud Formation. 
 
 ## What to change
-Our primary choice of notification is through a Slack bot. This means that the templates require a private bot key to your own Slack bot. `{{INSERT_SLACK_WEBHOOK_HERE}}` marks where you should insert your personal URL. Your URL should look something like
-"`https://hooks.slack.com/services/*`" where the symbol "`*`" is your unique bot webhook indentifier. 
+Our primary choice of notification is through a Slack bot. This means that there are two things to customise: your personal Slack bot and your own channel where you want your notifications to be in.
+
+Firstly, the templates require a private bot key to your own Slack bot. `{{INSERT_SLACK_WEBHOOK_HERE}}` marks where you should insert your personal URL. Your URL should look something like "`https://hooks.slack.com/services/...`".
+
+Secondly, you need to add your channel name. `{{INSERT_CHANNEL_NAME_HERE}}` marks where you should insert your channel name.
 
 ## How to upload it to AWS Cloud Formation
 Start by creating a new stack with new resources (standard).
