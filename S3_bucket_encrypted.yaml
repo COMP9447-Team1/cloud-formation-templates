@@ -60,7 +60,7 @@ Resources:
                       # === Slack Notifications part ====
                       try: #  try logic to catch errors
                           # URL var is basically the Bot's private key
-                          url = "https://hooks.slack.com/services/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"
+                          url = {{INSERT_SLACK_WEBHOOK_HERE}}
                           
                           # my own var
                           md_text = "*"+( event.get('detail-type', "Config Rule") + "*\n\n" + result + "\n")
