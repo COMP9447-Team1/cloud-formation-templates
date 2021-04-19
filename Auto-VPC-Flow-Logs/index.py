@@ -19,6 +19,7 @@ def lambda_handler(event, context):
     
     invokingEvent = json.loads(event["invokingEvent"])
     noncompliantVPC = invokingEvent["configurationItem"]["configuration"]["vpcId"]
+    VPCName = invokingEvent["configurationItem"]["configuration"]["tags"][0]["value"]
     
     # import lambda runtime vars
     lambdaFunctionName = os.environ['AWS_LAMBDA_FUNCTION_NAME']
@@ -78,7 +79,7 @@ def lambda_handler(event, context):
         )
         flowStatus = str(confirmFlowlogs['FlowLogs'][0]['FlowLogStatus'])
         if flowStatus == 'ACTIVE':
-            result = 'Flow logging is now SUCCESSFULLY enabled for VPC ' + noncompliantVPC
+            result = 'Flow logging is now SUCCESSFULLY enabled for VPC ' + noncompliantVPC + ' with name ' + VPCName
         else:
             result = "Enabling VPC flow logging failed! Remediate manually"
             print(result)
