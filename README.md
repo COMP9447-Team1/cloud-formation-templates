@@ -1,12 +1,21 @@
 # Cloud Formation Templates
-This repository contains all our cloud formation templates of our use cases. This makes it easy to set up our SOAR solution on any account and easy to tear down if needed. Each template requires one manual change before you can successfully import it in AWS Cloud Formation. 
+This repository contains all our cloud formation templates of our use cases. This makes it easy to set up our SOAR solution on any account and easy to tear down if needed. Each template needs to be customised and uploaded to an S3 Bucket before you can successfully import it in AWS Cloud Formation. 
 
-## What to change
-Our primary choice of notification is through a Slack bot. This means that there are two things to customise: your personal Slack bot and your own channel where you want your notifications to be in.
+## What to do before you upload to AWS Cloud Formation
+### Remediation Python File
+Our primary choice of notification is through a Slack bot. This means that there are two things to customise: your personal Slack bot and your own channel where you want your notifications to be in. This can be customised in the python file.
 
 Firstly, the templates require a private bot key to your own Slack bot. `{{INSERT_SLACK_WEBHOOK_HERE}}` marks where you should insert your personal URL. Your URL should look something like "`https://hooks.slack.com/services/...`".
 
 Secondly, you need to add your channel name. `{{INSERT_CHANNEL_NAME_HERE}}` marks where you should insert your channel name.
+
+Save your changes and create a zipfile with your remediation python file inside. This can be done using the command
+`zip {filename}.zip {pythonfile}`. An example of this command would be `zip auto-S3-encryption.zip index.py`.
+
+Upload the .zip file to an S3 bucket. You can do this by going to the home page of the AWS S3 service. Click on "Create bucket". Enter a unique bucket name. Upload your .zip file to the bucket by clicking on the bucket name and then clicking on the button "Upload".
+
+### CloudFormation Template
+There are two things to change on the template. Firstly, you would need the bucket name which you have just saved your .zip file in. Replace `{{INSERT_BUCKET_NAME}}` with your bucket name. Replace `{{INSERT_ZIPFILE_NAME}}` with your .zip file name. Save the file.
 
 ## How to upload it to AWS Cloud Formation
 Start by creating a new stack with new resources (standard).
