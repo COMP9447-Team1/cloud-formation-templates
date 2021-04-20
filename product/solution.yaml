@@ -1,0 +1,183 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+
+  S3BucketRemediationCFNs:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      AccessControl: PublicRead
+      BucketName: remediation-cfns2
+
+  S3BucketRemediationLambdas:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      AccessControl: PublicReadWrite
+      BucketName: remediation-lambdas2
+
+  CreateStackLambdaPermissions:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName:
+          Fn::GetAtt:
+            - CreateStackLambda
+            - Arn
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+  
+  RemoveStackLambdaPermissions:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName:
+          Fn::GetAtt:
+            - RemoveStackLambda
+            - Arn
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+
+  CreateStackLambda:
+    Type: 'AWS::Lambda::Function'
+    Description: "Cloud formation template to create stacks on request"
+    Properties:
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          client = boto3.client('cloudformation')
+
+          def lambda_handler(event, context):
+              # TODO implement
+              client = boto3.client('lambda')
+              role_response = (client.get_function_configuration(
+                  FunctionName = os.environ['AWS_LAMBDA_FUNCTION_NAME'])
+              )
+              print(role_response)
+              roleArn = role_response['Role']
+              # roleArn = "arn:aws:iam::221094580673:role/service-role/CreateStack-role-9vv4yuf8"
+              commandType = event['id']
+              capabilities = ['CAPABILITY_IAM']
+              stackName = commandType
+              print(commandType)
+              templateUrl = f"https://remediation-cfns.s3.amazonaws.com/{commandType}.yaml"
+              print(templateUrl)
+              print(event)
+              print(context)
+
+              response = client.create_stack(
+                  StackName=stackName,
+                  TemplateURL=templateUrl,
+                  Capabilities=capabilities,
+                  RoleARN=roleArn,
+              )
+
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps('Hello from Lambda!')
+              }
+      Handler: index.lambda_handler
+      Runtime: python3.8
+      Role:
+        Fn::GetAtt: 
+          - LambdaExecutionRole
+          - Arn
+  
+  RemoveStackLambda:
+    Type: 'AWS::Lambda::Function'
+    Description: "Cloud formation template to remove stacks on request"
+    Properties:
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          client = boto3.client('cloudformation')
+
+          def lambda_handler(event, context):
+              # TODO implement
+              stackName = event["id"]
+              print(stackName)
+              capabilities = ['CAPABILITY_IAM']
+              client = boto3.client('lambda')
+              role_response = (client.get_function_configuration(
+                  FunctionName = os.environ['AWS_LAMBDA_FUNCTION_NAME'])
+              )
+              print(role_response)
+              roleArn = role_response['Role']
+              # roleArn = "arn:aws:iam::221094580673:role/service-role/CreateStack-role-9vv4yuf8"
+              resourceTypes = ['AWS::*']
+              
+              
+              response = client.delete_stack(
+                  StackName=stackName,
+                  RoleARN=roleArn
+              )
+              
+              
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps('Hello from Lambda!')
+              }
+      Handler: index.lambda_handler
+      Runtime: python3.8
+      Role:
+        Fn::GetAtt: 
+          - LambdaExecutionRole
+          - Arn
+
+  LambdaExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - cloudformation.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /service-role/
+      ManagedPolicyArns:
+        - !Ref LambdaExecutionRoleCreateStackPolicy
+  
+  LambdaExecutionRoleCreateStackPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      Description: Policy for CreateStack lambda function
+      Path: /
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: VisualEditor0
+            Effect: Allow
+            Action: logs:CreateLogGroup
+            Resource: !Join
+            - ''
+            - - "arn:aws:logs:"
+              - !Ref 'AWS::Region'
+              - ":"
+              - !Ref 'AWS::AccountId'
+              - ":*"
+          - Sid: VisualEditor1
+            Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: !Join
+            - ''
+            - - "arn:aws:logs:"
+              - !Ref 'AWS::Region'
+              - ":"
+              - !Ref 'AWS::AccountId'
+              - ":log-group:/aws/lambda/CreateStack:*"
+          - Sid: VisualEditor2
+            Effect: Allow
+            Action:
+              - iam:CreatePolicy
+              - iam:*
+              - s3:GetObject
+              - iam:PassRole
+              - cloudformation:CreateStack
+              - lambda:*
+              - config:*
+            Resource: "*"
+
