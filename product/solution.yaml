@@ -5,14 +5,20 @@ Resources:
   S3BucketRemediationCFNs:
     Type: 'AWS::S3::Bucket'
     Properties:
-      AccessControl: PublicRead
-      BucketName: remediation-cfns2
+      AccessControl: Private
+      BucketName: !Join
+            - ''
+            - - "remediation-cfns-"
+              - !Ref 'AWS::AccountId'
 
   S3BucketRemediationLambdas:
     Type: 'AWS::S3::Bucket'
     Properties:
-      AccessControl: PublicReadWrite
-      BucketName: remediation-lambdas2
+      AccessControl: Private
+      BucketName: !Join
+            - ''
+            - - "remediation-lambdas-"
+              - !Ref 'AWS::AccountId'
 
   CreateStackLambdaPermissions:
       Type: AWS::Lambda::Permission
