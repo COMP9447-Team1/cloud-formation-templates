@@ -16,7 +16,9 @@ Resources:
     Description: "Cloud formation template to create VPC flow logs for every VPC"
     Properties:
       Code:
-        S3Bucket: "{{INSERT_BUCKET_NAME}}"
+        S3Bucket: !Join 
+          - "remediation-lambdas-"
+          - !Ref 'AWS::AccountId'
         S3Key: "{{INSERT_ZIPFILE_NAME}}"
       Handler: index.lambda_handler
       Runtime: python3.8
@@ -59,7 +61,6 @@ Resources:
       Path: /service-role/
       ManagedPolicyArns:
         - !Ref BasicVPCFlowLogRole
-        - "arn:aws:iam::aws:policy/AWSCodePipelineFullAccess"
   
   BasicVPCFlowLogRole:
     Type: 'AWS::IAM::ManagedPolicy'
@@ -75,6 +76,7 @@ Resources:
           - iam:PassRole
           - ec2:CreateFlowLogs
           - ec2:DescribeFlowLogs
+          - lambda:GetFunctionConfiguration
           Resource: "*"
         - Sid: VisualEditor1
           Effect: Allow

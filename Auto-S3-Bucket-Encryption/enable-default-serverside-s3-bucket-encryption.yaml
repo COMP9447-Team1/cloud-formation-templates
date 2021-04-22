@@ -16,7 +16,9 @@ Resources:
     Description: "Cloud formation template to enable automatic s3 bucket encryption across your account"
     Properties:
       Code:
-        S3Bucket: "{{INSERT_BUCKET_NAME}}"
+        S3Bucket: !Join 
+          - "remediation-lambdas-"
+          - !Ref 'AWS::AccountId'
         S3Key: "{{INSERT_ZIPFILE_NAME}}"
       Handler: index.lambda_handler
       Runtime: python3.8
@@ -59,7 +61,6 @@ Resources:
       Path: /service-role/
       ManagedPolicyArns:
         - !Ref BasicS3EncryptionRole
-        - "arn:aws:iam::aws:policy/AWSCodePipelineFullAccess"
   
   BasicS3EncryptionRole:
     Type: 'AWS::IAM::ManagedPolicy'
@@ -90,4 +91,5 @@ Resources:
             Action: 
             - s3:PutEncryptionConfiguration
             - s3:GetEncryptionConfiguration
+            - lambda:GetFunctionConfiguration
             Resource: "*"
