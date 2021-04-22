@@ -13,7 +13,7 @@ def lambda_handler(event, context):
     )
     print(role_response)
     roleArn = role_response['Role']
-    # roleArn = "arn:aws:iam::221094580673:role/service-role/CreateStack-role-9vv4yuf8"    resourceTypes = ['AWS::*']
+    resourceTypes = ['AWS::*']
     
     
     response = client.delete_stack(

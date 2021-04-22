@@ -10,12 +10,12 @@ def lambda_handler(event, context):
     )
     print(role_response)
     roleArn = role_response['Role']
-    # roleArn = "arn:aws:iam::221094580673:role/service-role/CreateStack-role-9vv4yuf8"
+    accountId = context.invoked_function_arn.split(":")[4]
     commandType = event['id']
     capabilities = ['CAPABILITY_IAM']
     stackName = commandType
     print(commandType)
-    templateUrl = f"https://remediation-cfns.s3.amazonaws.com/{commandType}.yaml"
+    templateUrl = f"https://remediation-cfns-{accountId}.s3.amazonaws.com/{commandType}.yaml"
     print(templateUrl)
     print(event)
     print(context)
