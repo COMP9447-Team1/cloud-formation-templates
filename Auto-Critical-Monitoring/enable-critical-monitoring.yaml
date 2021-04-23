@@ -16,6 +16,63 @@ Resources:
           - LambdaExecutionRoleStopEC2Instance
           - Arn
       Runtime: "python3.8"
+  
+  LambdaExecutionRoleStopEC2Instance:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /service-role/
+      ManagedPolicyArns: 
+        - !Ref BasicStopEC2InstanceRole
+        - !Ref InlineStopEC2InstanceRole
+
+  BasicStopEC2InstanceRole:
+    Type: 'AWS::IAM::ManagedPolicy'
+      Properties:
+        Description: Managed policy for stopping an ec2 instance
+        Path: /
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: logs:CreateLogGroup
+              Resource: !Join
+                = ''
+                - 'arn:aws:logs:'
+                - !Ref 'AWS::Region'
+                - ':'
+                - !Ref 'AWS::AccountId'
+                - ':*'
+            - Effect: Allow
+              Action:
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: !Join
+                = ''
+                - 'arn:aws:logs:'
+                - !Ref 'AWS::Region'
+                - ':'
+                - !Ref 'AWS::AccountId'
+                - ':log-group:/aws/lambda/StopEC2Instance:*'
+
+  InlineStopEC2InstanceRole:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: VisualEditor0
+            Effect: Allow
+            Action: ec2:StopInstances
+            Resource: "*"
 
   EC2BlockIPAddress:
     Type: "AWS::Lambda::Function"
@@ -78,60 +135,118 @@ Resources:
                 - !Ref 'AWS::AccountId'
                 - ':log-group:/aws/lambda/EC2BlockIPAddress:*'
 
-  LambdaExecutionRoleStopEC2Instance:
-    Type: "AWS::IAM::Role"
+  GuardDutyToSlack:
+    Type: "AWS::Lambda::Function"
     Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-      Path: /service-role/
-      ManagedPolicyArns: 
-        - !Ref BasicStopEC2InstanceRole
-        - !Ref InlineStopEC2InstanceRole
+      Description: "Sending options from guard duty to slack"
+      Handler: "index.lambda_handler"
+      Code:
+        S3Bucket: !Join 
+          - "remediation-lambdas-"
+          - !Ref 'AWS::AccountId'
+        S3Key: "{{INSERT_ZIPFILE_NAME}}"
+      Role:
+        Fn::GetAtt: 
+          - LambdaExecutionRoleGuardDutyToSlack
+          - Arn
+      Runtime: "python3.6"
 
-  BasicStopEC2InstanceRole:
+  GuardDutyToSlackVersion:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref GuardDutyToSlack
+
+  GuardDutyToSlackDestination:
+    Type: "AWS::Lambda::EventInvokeConfig"
+    Properties:
+      DestinationConfig:
+        OnFailure:
+          Destination: !Join
+            - ''
+            - 'arn:aws:sns:'
+            - !Ref 'AWS::Region'
+            - ':'
+            - !Ref 'AWS::AccountId'
+            - ':GuardDuty_to_Slack'
+        OnSuccess:
+          Destination: !Join
+            - ''
+            - 'arn:aws:sns:'
+            - !Ref 'AWS::Region'
+            - ':'
+            - !Ref 'AWS::AccountId'
+            - ':GuardDuty_to_Slack'
+      FunctionName: !Ref GuardDutyToSlack
+      Qualifier: !GetAtt GuardDutyToSlackVersion.Version
+  
+  LambdaExecutionRoleGuardDutyToSlack:
+    Type: "AWS::IAM::Role"
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action:
+                - 'sts:AssumeRole'
+        Path: /service-role/
+        ManagedPolicyArns: 
+        - !Ref AWSLambdaBasicExecutionRole
+        - !Ref BasicGuardDutyToSlackPolicy
+
+  BasicGuardDutyToSlackPolicy:
     Type: 'AWS::IAM::ManagedPolicy'
       Properties:
-        Description: Managed policy for stopping an ec2 instance
+        Description: Managed policy for sending guard duty msgs to slack
         Path: /
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
-            - Effect: Allow
-              Action: logs:CreateLogGroup
+            - Sid: VisualEditor0
+              Effect: Allow
+              Action: sns:Publish
               Resource: !Join
-                = ''
-                - 'arn:aws:logs:'
+                - ''
+                - 'arn:aws:sns:'
                 - !Ref 'AWS::Region'
                 - ':'
                 - !Ref 'AWS::AccountId'
-                - ':*'
-            - Effect: Allow
-              Action:
-                - logs:CreateLogStream
-                - logs:PutLogEvents
-              Resource: !Join
-                = ''
-                - 'arn:aws:logs:'
-                - !Ref 'AWS::Region'
-                - ':'
-                - !Ref 'AWS::AccountId'
-                - ':log-group:/aws/lambda/StopEC2Instance:*'
+                - ':GuardDutyToSlack'
+            - Sid: VisualEditor1
+              Effect: Allow
+              Action:  iam:GetUser
+              Resource: "*"
+    
+  GuardDutyToSlackPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName:
+          Fn::GetAtt:
+            - GuardDutyToSlack
+            - Arn
+        Action: lambda:InvokeFunction
+        Principal: events.amazonaws.com
+  
+  GuardDutyToSlackRule: 
+  Type: AWS::Events::Rule
+  Properties: 
+    Description: "Rule to trigger lambda for guard duty"
+    State: "ENABLED"
+    EventPattern: 
+      source: 
+        - "aws.guardduty"
+      detail-type: 
+          - "UnauthorizedAccess:EC2/RDPBruteForce"
+    Targets: 
+      - 
+        Arn: 
+          Fn::GetAtt: 
+            - "GuardDutyToSlack"
+            - "Arn"
 
-  InlineStopEC2InstanceRole:
-    Type: "AWS::IAM::Policy"
-    Properties:
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: VisualEditor0
-            Effect: Allow
-            Action: ec2:StopInstances
-            Resource: "*"
+
+
+      
 
