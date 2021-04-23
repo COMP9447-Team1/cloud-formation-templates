@@ -17,8 +17,9 @@ Resources:
     Properties:
       Code:
         S3Bucket: !Join 
-          - "remediation-lambdas-"
-          - !Ref 'AWS::AccountId'
+          - ''
+          - - "remediation-lambdas-"
+            - !Ref 'AWS::AccountId'
         S3Key: "{{INSERT_ZIPFILE_NAME}}"
       Handler: index.lambda_handler
       Runtime: python3.8
