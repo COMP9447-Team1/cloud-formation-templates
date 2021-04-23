@@ -1,5 +1,6 @@
 import json
 import boto3
+import os
 client = boto3.client('cloudformation')
 
 def lambda_handler(event, context):
