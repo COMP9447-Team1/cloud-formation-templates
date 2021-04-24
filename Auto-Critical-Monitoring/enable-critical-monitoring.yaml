@@ -5,6 +5,7 @@ Resources:
   StopEC2Instance:
     Type: AWS::Lambda::Function
     Properties:
+      FunctionName: StopEC2Instance
       Description: "Stopping an EC2 instance"
       Handler: index.lambda_handler
       Code: 
@@ -12,7 +13,7 @@ Resources:
           - ''
           - - "remediation-lambdas-"
             - !Ref 'AWS::AccountId'
-        S3Key: "{{INSERT_ZIPFILE_NAME_CONTAINING_STOPEC2INSTANCE_FILE}}"
+        S3Key: "ec2-stop.zip"
       Role: !GetAtt LambdaExecutionRoleStopEC2Instance.Arn
       Runtime: python3.8
   
@@ -68,6 +69,7 @@ Resources:
   EC2BlockIPAddress:
     Type: AWS::Lambda::Function
     Properties:
+      FunctionName: EC2BlockIPAddress
       Description: "Blocking an EC2 IP address"
       Handler: index.lambda_handler
       Code: 
@@ -75,7 +77,7 @@ Resources:
           - ''
           - - "remediation-lambdas-"
             - !Ref 'AWS::AccountId'
-        S3Key: "{{INSERT_ZIPFILE_NAME_CONTAINING_BLOCKEC2INSTANCE_FILE}}"
+        S3Key: "ec2-block.zip"
       Role: !GetAtt LambdaExecutionRoleEC2BlockIPAddress.Arn
       Runtime: python3.8
 
@@ -136,6 +138,7 @@ Resources:
   GuardDutyToSlack:
     Type: AWS::Lambda::Function
     Properties:
+      FunctionName: GuardDutyToSlack
       Description: "Sending options from guard duty to slack"
       Handler: index.lambda_handler
       Code:
@@ -143,7 +146,7 @@ Resources:
           - ''
           - - "remediation-lambdas-"
             - !Ref 'AWS::AccountId'
-        S3Key: "{{INSERT_ZIPFILE_NAME_CONTAINING_GUARDDUTYTOSLACK_FILE}}"
+        S3Key: "guarddutytoslack.zip"
       Role: !GetAtt LambdaExecutionRoleGuardDutyToSlack.Arn
       Runtime: python3.6
 
@@ -270,8 +273,8 @@ Resources:
     Properties: 
       ConfigurationName: GuardDutyToSlackChatBot
       IamRoleArn: !GetAtt GuardDutyToSlackChatBotExecutionRole.Arn
-      SlackChannelId: "{{INSERT_PERSONAL_SLACK_CHANNEL_ID}}"
-      SlackWorkspaceId: "{{INSERT_PERSONAL_SLACK_WORKSHOP_ID}}"
+      SlackChannelId: C01UN9MKLNL
+      SlackWorkspaceId: T01N9HUT3CH
       SnsTopicArns: 
         - !Ref GuardDutyToSlackSNS
 
@@ -321,3 +324,4 @@ Resources:
           - lambda:invokeFunction
           Resource:
           - "*"
+

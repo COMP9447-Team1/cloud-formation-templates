@@ -15,6 +15,7 @@ Resources:
     Type: 'AWS::Lambda::Function'
     Description: "Cloud formation template to enable automatic s3 bucket encryption across your account"
     Properties:
+      FunctionName: S3BucketEncrypted
       Code:
         S3Bucket: !Join 
           - ''

@@ -14,6 +14,7 @@ Resources:
     Type: "AWS::Lambda::Function"
     Description: "Cloud formation template to create VPC flow logs for every VPC"
     Properties:
+      FunctionName: VPCFlowLogsEnabled
       Code:
         S3Bucket: !Join
           - ""
