@@ -93,11 +93,6 @@ def ipaddr_replace_last_dgt(ip, d):
 def giveUserOptions(instanceID, ip):
         # === Slack Notifications part ====
         try: #  try logic to catch errors
-            # webhooks dict contains basically the Bot's private keys
-            webhooks =  {
-              "team1": "https://hooks.slack.com/services/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",
-              "rudy-guardduty": "https://hooks.slack.com/services/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",
-            }
             
             ipmod = ipaddr_replace_last_dgt(ip,1) + "/24"
             print(ipmod)
