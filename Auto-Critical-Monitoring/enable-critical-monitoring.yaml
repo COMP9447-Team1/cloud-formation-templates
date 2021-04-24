@@ -12,7 +12,7 @@ Resources:
           - ''
           - - "remediation-lambdas-"
             - !Ref 'AWS::AccountId'
-        S3Key: "ec2-stop.zip"
+        S3Key: "{{INSERT_ZIPFILE_NAME_CONTAINING_STOPEC2INSTANCE_FILE}}"
       Role: !GetAtt LambdaExecutionRoleStopEC2Instance.Arn
       Runtime: python3.8
   
@@ -75,7 +75,7 @@ Resources:
           - ''
           - - "remediation-lambdas-"
             - !Ref 'AWS::AccountId'
-        S3Key: "ec2-block.zip"
+        S3Key: "{{INSERT_ZIPFILE_NAME_CONTAINING_BLOCKEC2INSTANCE_FILE}}"
       Role: !GetAtt LambdaExecutionRoleEC2BlockIPAddress.Arn
       Runtime: python3.8
 
@@ -143,7 +143,7 @@ Resources:
           - ''
           - - "remediation-lambdas-"
             - !Ref 'AWS::AccountId'
-        S3Key: "guarddutytoslack.zip"
+        S3Key: "{{INSERT_ZIPFILE_NAME_CONTAINING_GUARDDUTYTOSLACK_FILE}}"
       Role: !GetAtt LambdaExecutionRoleGuardDutyToSlack.Arn
       Runtime: python3.6
 
@@ -270,8 +270,8 @@ Resources:
     Properties: 
       ConfigurationName: GuardDutyToSlackChatBot
       IamRoleArn: !GetAtt GuardDutyToSlackChatBotExecutionRole.Arn
-      SlackChannelId: C01UN9MKLNL
-      SlackWorkspaceId: T01N9HUT3CH
+      SlackChannelId: "{{INSERT_PERSONAL_SLACK_CHANNEL_ID}}"
+      SlackWorkspaceId: "{{INSERT_PERSONAL_SLACK_WORKSHOP_ID}}"
       SnsTopicArns: 
         - !Ref GuardDutyToSlackSNS
 
@@ -321,6 +321,3 @@ Resources:
           - lambda:invokeFunction
           Resource:
           - "*"
-
-
-
