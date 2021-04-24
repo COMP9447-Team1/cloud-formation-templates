@@ -93,14 +93,15 @@ def ipaddr_replace_last_dgt(ip, d):
 def giveUserOptions(instanceID, ip):
         # === Slack Notifications part ====
         try: #  try logic to catch errors
+            # webhooks dict contains basically the Bot's private keys
             
             ipmod = ipaddr_replace_last_dgt(ip,1) + "/24"
             print(ipmod)
             
             actions = {
-               "Stop EC2 instance": "@aws invoke StopEC2Instance --region us-east-1 --payload " +  '{"id": "' + instanceID + '"}',
-               "Ban IP address": "@aws invoke EC2BlockIPAddress --region us-east-1  --payload " +        '{"id": "' + instanceID + '", "ip": "' + ip + '"}',
-               "Ban the entire IP subnet": "@aws invoke EC2BlockIPAddress --region us-east-1  --payload " +  '{"id": "' + instanceID + '", "ip": "' + ipmod +'"}',
+               "Stop EC2 instance": "@aws invoke StopEC2Instance --region" + globalVars['REGION_NAME'] + "--payload " +  '{"id": "' + instanceID + '"}',
+               "Ban IP address": "@aws invoke EC2BlockIPAddress --region" + globalVars['REGION_NAME'] + "--payload " +        '{"id": "' + instanceID + '", "ip": "' + ip + '"}',
+               "Ban the entire IP subnet": "@aws invoke EC2BlockIPAddress --region" + globalVars['REGION_NAME'] + "--payload " +  '{"id": "' + instanceID + '", "ip": "' + ipmod +'"}',
                "Ignore": "(do nothing)"
             }
             
