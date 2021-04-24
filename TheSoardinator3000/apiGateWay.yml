@@ -1,0 +1,267 @@
+Resources:
+  PolicyAPIGWRemediationAPIunauth:
+    DependsOn:
+      - RemediationAPI
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: PolicyAPIGWRemediationAPIunauth
+      Roles:
+        - !Ref unauthRoleName
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - execute-api:Invoke
+            Resource:
+              - !Join:
+                - ""
+                - - "arn:aws:execute-api:"
+                  - !Ref AWS::Region
+                  - ":"
+                  - !Ref AWS::AccountId
+                  - ":"
+                  - !Ref RemediationAPI
+                  - "/"
+                  - !If:
+                    - ShouldNotCreateEnvResources
+                    - Prod
+                    - !Ref env
+                  - "/POST"
+                  - "/delete"
+              - !Join:
+                - ""
+                - - "arn:aws:execute-api:"
+                  - !Ref AWS::Region
+                  - ":"
+                  - !Ref AWS::AccountId
+                  - ":"
+                  - !Ref RemediationAPI
+                  - "/"
+                  - !If:
+                    - ShouldNotCreateEnvResources
+                    - Prod
+                    - !Ref env
+                  - "/POST"
+                  - "/add"
+              - !Join:
+                - ""
+                - - "arn:aws:execute-api:"
+                  - !Ref AWS::Region
+                  - ":"
+                  - !Ref AWS::AccountId
+                  - ":"
+                  - !Ref RemediationAPI
+                  - "/"
+                  - !If:
+                    - ShouldNotCreateEnvResources
+                    - Prod
+                    - !Ref env
+                  - "/GET"
+                  - "/delete"
+  RemediationAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Description: ""
+      Name: RemediationAPI
+      Body:
+        swagger: "2.0"
+        info:
+          version: "2018-05-24T17:52:00Z"
+          title: RemediationAPI
+        host: !Join:
+          - ""
+          - - apigateway.
+            - !Ref AWS::Region
+            - ".amazonaws.com"
+        basePath: !If:
+          - ShouldNotCreateEnvResources
+          - "/Prod"
+        schemes:
+          - https
+        paths:
+          "/delete":
+            options:
+              consumes:
+                - application/json
+              produces:
+                - application/json
+              responses:
+                "200":
+                  description: 200 response
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Headers:
+                      type: string
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: "'POST'"
+                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                requestTemplates:
+                  application/json: '{"statusCode": 200}'
+                passthroughBehavior: when_no_match
+                type: mock
+            x-amazon-apigateway-any-method:
+              consumes:
+                - application/json
+              produces:
+                - application/json
+              parameters:
+                - in: body
+                  name: RequestSchema
+                  required: false
+                  schema:
+                    "$ref": "#/definitions/RequestSchema"
+              responses:
+                "200":
+                  description: 200 response
+                  schema:
+                    "$ref": "#/definitions/ResponseSchema"
+              security:
+                - sigv4: []
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: "200"
+                uri: !Join:
+                  - ""
+                  - - "arn:aws:apigateway:"
+                    - !Ref AWS::Region
+                    - ":lambda:path/2015-03-31/functions/"
+                    - CreateStack
+                    - "/invocations"
+                passthroughBehavior: when_no_match
+                httpMethod: POST
+                type: aws_proxy
+          "/add":
+            options:
+              consumes:
+                - application/json
+              produces:
+                - application/json
+              responses:
+                "200":
+                  description: 200 response
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Headers:
+                      type: string
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: "'POST'"
+                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                requestTemplates:
+                  application/json: '{"statusCode": 200}'
+                passthroughBehavior: when_no_match
+                type: mock
+            x-amazon-apigateway-any-method:
+              consumes:
+                - application/json
+              produces:
+                - application/json
+              parameters:
+                - in: body
+                  name: RequestSchema
+                  required: false
+                  schema:
+                    "$ref": "#/definitions/RequestSchema"
+              responses:
+                "200":
+                  description: 200 response
+                  schema:
+                    "$ref": "#/definitions/ResponseSchema"
+              security:
+                - sigv4: []
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: "200"
+                uri: !Join:
+                  - ""
+                  - - "arn:aws:apigateway:"
+                    - !Ref AWS::Region
+                    - ":lambda:path/2015-03-31/functions/"
+                    - RemoveStack
+                    - "/invocations"
+                passthroughBehavior: when_no_match
+                httpMethod: POST
+                type: aws_proxy
+        securityDefinitions:
+          sigv4:
+            type: apiKey
+            name: Authorization
+            in: header
+            x-amazon-apigateway-authtype: awsSigv4
+        definitions:
+          RequestSchema:
+            type: object
+            required:
+              - request
+            properties:
+              request:
+                type: string
+            title: Request Schema
+          ResponseSchema:
+            type: object
+            required:
+              - response
+            properties:
+              response:
+                type: string
+            title: Response Schema
+      FailOnWarnings: true
+  functiontestAmplifyAPIPermissionRemediationAPI:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref functiontestAmplifyAPIName
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Join:
+        - ""
+        - - "arn:aws:execute-api:"
+          - !Ref AWS::Region
+          - ":"
+          - !Ref AWS::AccountId
+          - ":"
+          - !Ref RemediationAPI
+          - "/*/*/*"
+  DeploymentAPIGWRemediationAPI:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      Description: The Development stage deployment of your API.
+      StageName: Prod
+      RestApiId: !Ref RemediationAPI
+Outputs:
+  RootUrl:
+    Description: Root URL of the API gateway
+    Value: !Join:
+      - ""
+      - - https://
+        - !Ref RemediationAPI
+        - ".execute-api."
+        - !Ref AWS::Region
+        - ".amazonaws.com/"
+        - !If:
+          - ShouldNotCreateEnvResources
+          - Prod
+          - !Ref env
+  ApiName:
+    Description: API Friendly name
+    Value: RemediationAPI
+  ApiId:
+    Description: API ID (prefix of API URL)
+    Value: !Ref RemediationAPI
