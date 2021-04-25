@@ -10,14 +10,6 @@ http = urllib3.PoolManager()
 
 # Description of the security rule we want to replace
 # SECURITY_RULE_DESCR = "My Home IP"
-
-def lambda_handler(event, context):
-    vpc = event['id']
-    new_ip_address = event['ip']
-    
-    result = update_security_group(vpc, new_ip_address)
-    
-    return result
     
 def gen_iprange(ip_addr, i = 32):
     if(ip_addr.find("/") == -1): # hash not found
@@ -32,53 +24,59 @@ def gen_iprange(ip_addr, i = 32):
         buf = ip_addr
     
     return buf
-
-def update_security_group(vpcid, ip_addr):
-    result = "Success"
-    client = boto3.client('ec2')
     
-    # see https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2.html#EC2.SecurityGroup.ip_permissions
-    processed_ip = gen_iprange(ip_addr)
-    processed_ip_desc = "Ban_IP_" + processed_ip
+def lambda_handler(event, context):
+    ec2 = boto3.client('ec2')
+    vpc = ec2.describe_instances(
+        InstanceIds=[
+            event['id']
+        ],
+    )['Reservations'][0]['Instances'][0]['VpcId']
+    print(vpc)
     
-    try:
-        response = client.create_security_group(GroupName=processed_ip_desc, Description = processed_ip_desc, VpcId = vpcid)
-        
-        # TODO check if it permits or bans upon input 
-        
-        new = {
-            "FromPort": -1, # all ports
-            "ToPort": -1, # all ports
-            "IpProtocol": "-1", # all protocols
-            "IpRanges": {}, # to be set
-        }
-        new["IpRanges"]["CidrIp"] = processed_ip
-        new["IpRanges"]["Description"] = processed_ip + " has been ban-hammered!"
-        
-        group = response['SecurityGroups'][0]
-        for permission in group['IpPermissions']:
-            new_permission = copy.deepcopy(permission)
-            new_permission['IpRanges'].update(new)
-    except ClientError as e:
-        print(e)
-        pass
-
-    # line below - not needed as the group is new
-    #client.revoke_security_group_ingress(GroupId=group['GroupId'], IpPermissions=[permission])
-    try:
-        client.authorize_security_group_ingress(GroupId=group['GroupId'], IpPermissions=[new_permission])
-    except Exception as e:
-        print(e)
-        pass
-        
+    networkACL = ec2.describe_network_acls(
+        Filters=[
+            {
+                'Name': 'vpc-id',
+                'Values': [
+                    vpc,
+                ]
+            },
+        ],
+    )['NetworkAcls'][0]['Associations'][0]['NetworkAclId']
+    print(networkACL)
+    
+    entryCount = len(ec2.describe_network_acls(
+        Filters=[
+            {
+                'Name': 'vpc-id',
+                'Values': [
+                    vpc,
+                ]
+            },
+        ],
+    )['NetworkAcls'][0]['Entries'])
+    
+    ruleNum = entryCount*5
+    
+    ingress = ec2.create_network_acl_entry(
+        CidrBlock=gen_iprange(event['ip']),
+        Egress=False,
+        NetworkAclId=networkACL,
+        Protocol='-1',
+        RuleAction='deny',
+        RuleNumber=ruleNum,
+    )
+    
     # === Slack Notifications part ====
     try: #  try logic to catch errors
+        
         # parameters
         channel = "{{INSERT_CHANNEL_NAME_HERE}}"
         url = "{{INSERT_WEBHOOK_HERE}}"
         
         # my own var
-        md_text = "*\U0001F528 Ban Success*\n\n*" + processed_ip + "* has been banned."
+        md_text = "*\U0001F528 Ban Success*\n\n*" + gen_iprange(event['ip']) + "* has been banned."
         
         msg = {
             "channel": "#{}".format(channel),
@@ -98,4 +96,4 @@ def update_security_group(vpcid, ip_addr):
         print(e)
         raise
     # ==== Slack END ===
-    return result
+    return "Successully blocked IP address."
