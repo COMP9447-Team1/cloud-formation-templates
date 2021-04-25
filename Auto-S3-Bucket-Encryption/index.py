@@ -1,3 +1,11 @@
+# How this lambda function works
+# Lambda function is triggered by a config rule, which means that we're going to use the event variable instead of the context variable.
+# We grab the relevant information from the event to use in our get_bucket_encryption and put_bucket_encryption calls.
+# We start by using the bucket name to check if encryption is enabled on the bucket.
+# If not, we add encryption on it.
+# Most of these function calls are made from boto3. 
+# See https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2.html for more information
+# on how each function works.
 import json
 import boto3
 import urllib3 
