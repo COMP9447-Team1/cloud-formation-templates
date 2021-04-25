@@ -1,9 +1,16 @@
+# How this lambda function works
+# This lambda starts off by creating global variables - region and sns topic arn.
+# These two variables are important because it tells our function where to look and what to call.
+# From here, we can send in options that our user can call straight from the slack channel.
+# Most of these function calls are made from boto3. 
+# See https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2.html for more information
+# on how each function works.
 import boto3, os, sys, json, logging
 
 import re #for IP manipulation
 
 import urllib3 
-http = urllib3.PoolManager() # not sure not why inside of def - is it executed only once?
+http = urllib3.PoolManager() 
 
 import time # delays
 
