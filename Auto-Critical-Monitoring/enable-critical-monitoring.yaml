@@ -273,8 +273,8 @@ Resources:
     Properties: 
       ConfigurationName: GuardDutyToSlackChatBot
       IamRoleArn: !GetAtt GuardDutyToSlackChatBotExecutionRole.Arn
-      SlackChannelId: C01UN9MKLNL
-      SlackWorkspaceId: T01N9HUT3CH
+      SlackChannelId: {{INSERT_SLACK_CHANNEL_ID}}
+      SlackWorkspaceId: {{INSERT_SLACK_WORKSPACE_ID}}
       SnsTopicArns: 
         - !Ref GuardDutyToSlackSNS
 
