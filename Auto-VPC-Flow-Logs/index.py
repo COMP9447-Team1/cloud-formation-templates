@@ -1,19 +1,25 @@
+# How this lambda function works
+# Lambda function is triggered by a config rule, which means that we're going to use the event variable instead of the context variable.
+# We grab the relevant information from the event to use in our function calls.
+# This function is called once a VPC is created, which means theres an assumption that there
+# is no flowlogs created. We start by creating a flow log group so we use that as a variable
+# when creating flow logs.
+# To double check that flow logs are created correctly, we get the details of the flow log and check that it's active.
+# Most of these function calls are made from boto3. 
+# See https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2.html for more information
+# on how each function works.
 import json
 import boto3
 import time
 import os
 import random
 import urllib3 
-http = urllib3.PoolManager() # not sure not why inside of def - is it executed only once?
+http = urllib3.PoolManager() 
 
 
 def lambda_handler(event, context):
-    # NOTE: This main function was SLIGHTLY updated
-    # Change: added 'result' var so the same strings can be re-used
-    # PS. Still not as good as the proper OOP programming with different classes etc, but that's something right?
     result = "Event handling failed for unknown reasons" #default string
     
-    # Grab non-logged VPC ID from Security Hub finding
     print(event)
     print(context)
     
