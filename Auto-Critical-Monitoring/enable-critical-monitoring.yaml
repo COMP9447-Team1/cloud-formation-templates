@@ -125,6 +125,12 @@ Resources:
                 - ':'
                 - !Ref 'AWS::AccountId'
                 - ':log-group:/aws/lambda/EC2BlockIPAddress:*'
+          - Effect: Allow
+            Action:
+            - ec2:DescribeNetworkAcls
+            - ec2:DescribeInstances
+            - ec2:CreateNetworkAclEntry
+            Resource: '*'
   
 # Guard Duty findings to Slack
   GuardDutyToSlackPermission:
