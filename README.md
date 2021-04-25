@@ -1,21 +1,68 @@
 # Cloud Formation Templates
-This repository contains all our cloud formation templates of our use cases. This makes it easy to set up our SOAR solution on any account and easy to tear down if needed. Each template needs to be customised and uploaded to an S3 Bucket before you can successfully import it in AWS Cloud Formation. 
+This repository contains all our cloud formation templates of our use cases and final product. This makes it easy to set up our application on any account and easy to tear down if needed. 
 
-## What to do before you upload to AWS Cloud Formation
-### Remediation Python File
-Our primary choice of notification is through a Slack bot. This means that there are two things to customise: your personal Slack bot and your own channel where you want your notifications to be in. This can be customised in the python file.
+## What to do before deployment
+There are a few things to customise before deployment.
 
-Firstly, the templates require a private bot key to your own Slack bot. `{{INSERT_SLACK_WEBHOOK_HERE}}` marks where you should insert your personal URL. Your URL should look something like "`https://hooks.slack.com/services/...`".
+1. If creating a new slack workplace, a workplace ID needs to be created by AWS to be inputted into the auto-critical-monitoring cloud formation template. This needs to be done before as this cannot be done automatically by the template. This can be done by AWS Chatbot > Configure New Client.
+2. Ensure that all personal customisations are completed. These customisations are marked between double curly brackets on our lambda function files and cloud formation templates. All customisations are listed below.
+  - INSERT_SLACK_CHANNEL_ID (enable-critical-monitoring.yaml)
+  - INSERT_SLACK_WORKSPACE_ID  (enable-critical-monitoring.yaml)
+  - INSERT_CHANNEL_NAME_HERE (for all index.py files)
+  - INSERT_WEBHOOK_HERE (for all index.py files). If you're using Slack, your webhook should look something like "`https://hooks.slack.com/services/...`".
+  - INSERT_ZIPFILE_NAME (for all remediation templates)
 
-Secondly, you need to add your channel name. `{{INSERT_CHANNEL_NAME_HERE}}` marks where you should insert your channel name.
+As part of our customisable solution, each remediation will need to be uploaded into the lambda-remediations S3 bucket. 
 
-Save your changes and create a zipfile with your remediation python file inside. This can be done using the command
-`zip {filename}.zip {pythonfile}`. An example of this command would be `zip auto-S3-encryption.zip index.py`.
+1. Run the solution.yaml cloud formation template. This will create your S3 buckets.
+2. Zip each remediation you wish to implement and place them the lambda-remediation S3 bucket. See "How to upload files to an S3 Bucket" for a visual example of how to upload a file through the management console.
+3. Make sure that you edit the accompanying cloud formation template to replace INSERT_ZIPFILE_NAME with the .zip file which contains the remediation. 
 
-Upload the .zip file to an S3 bucket. You can do this by going to the home page of the AWS S3 service. Click on "Create bucket". Enter a unique bucket name. Upload your .zip file to the bucket by clicking on the bucket name and then clicking on the button "Upload".
+Finally, the application is ready to run. See "How to upload it to AWS Cloud Formation" for a visual example of how to use a cloud formation template through the management console.
 
-### CloudFormation Template
-There are two things to change on the template. Firstly, you would need the bucket name which you have just saved your .zip file in. Replace `{{INSERT_BUCKET_NAME}}` with your bucket name. Replace `{{INSERT_ZIPFILE_NAME}}` with your .zip file name. Save the file.
+1. Enable all resources from SOARdinator 3000 frontend
+2. Navigate to Cloud Formation Stack to confirm that the corresponding stacks are created
+3. Enjoy using our solution! (Note: In some cases, config rules can take up to 8 hours to load and work.)
+
+A few things to double check in case of errors:
+- Make sure that all the templates and lambda function files are deployed to the same AWS region. 
+- Make sure that all the files are inside the correct S3 bucket and are referenced correctly inside the cloud formation template.
+
+## How to upload files to an S3 Bucket
+Click on your remediation bucket. It should be named “lambda-remediations-” followed by your account ID.
+
+<p align="center">
+  <img src="images/find-bucket.png" />
+</p>
+</br>
+
+Click the Upload button.
+
+<p align="center">
+  <img src="images/option-upload-file.png" />
+</p>
+</br>
+
+Click on “Add Files” and add your .zip file/s. 
+
+<p align="center">
+  <img src="images/add-file.png" />
+</p>
+</br>
+
+Click on the Upload button at the bottom of the screen.
+
+<p align="center">
+  <img src="images/upload-file.png" />
+</p>
+</br>
+
+Wait until upload is completed. This is shown by a green alert box at the top of the page. Once this is all done, your remediation has been successfully uploaded into the bucket.
+
+<p align="center">
+  <img src="images/success-file-uploaded.png" />
+</p>
+</br>
 
 ## How to upload it to AWS Cloud Formation
 Start by creating a new stack with new resources (standard).
