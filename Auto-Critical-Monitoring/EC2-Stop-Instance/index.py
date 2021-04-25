@@ -1,3 +1,8 @@
+# How this lambda function works
+# Lambda function takes one variable as the payload - the EC2 instance id.
+# Using the instance id, we can stop the instance using the boto3 function stop_instances.
+# See https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2.html for more information
+# on how this function works.
 import json
 import boto3
 import botocore
