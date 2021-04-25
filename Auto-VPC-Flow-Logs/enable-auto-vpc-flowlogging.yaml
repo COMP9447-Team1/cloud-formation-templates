@@ -20,7 +20,7 @@ Resources:
           - ""
           - - "remediation-lambdas-"
             - !Ref "AWS::AccountId"
-        S3Key: "enable-auto-vpc-flowlogging.zip"
+        S3Key: "{{INSERT_ZIPFILE_NAME}}"
       Handler: index.lambda_handler
       Runtime: python3.8
       Role:
